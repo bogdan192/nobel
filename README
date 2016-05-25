@@ -1,0 +1,9 @@
+[SETUP]
+pip install -r requirements.txt
+
+[RUN]
+python tests.py
+
+[RUN_WITH_NOSE]
+nosetests --with-xunit
+Results can be found in nosetests.xml under XML format (jenkins can parse them)
