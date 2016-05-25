@@ -48,7 +48,8 @@ class NobelRestTest(TestsCommon):
         self.assertTrue(r.json()['token'] != r.json()['refreshToken'], 'Token and refreshToken are the same')
 
     def test_login_with_bad_username(self):
-        login = {'username': 'bad_username', 'password': self.password}
+        login = {'username': 'bad_username',
+                 'password': self.password}
         r = self.n_client.login(login)
         # Assuming bad login attempt for mismatching credentials status code is 403
         self.assertEqual(r.status_code, 403, 'Got unexpected RC for bad username')
@@ -58,7 +59,8 @@ class NobelRestTest(TestsCommon):
         self.assertTrue(r.json()['refreshToken'] == STRINGS['u_nf'])
 
     def test_login_bad_pw(self):
-        login = {'username': self.user,   'password': 'bad_password'}
+        login = {'username': self.user,
+                 'password': 'bad_password'}
         r = self.n_client.login(login)
         self.assertEqual(r.status_code, 403, 'Got unexpected RC for bad password')
         self.assertFalse(self.check_success_json(r.json()), 'Did not get expected success message for bad password')
@@ -68,7 +70,8 @@ class NobelRestTest(TestsCommon):
     @unittest.skip('Dont wannt to bruteforce this run')
     def test_bruteforce_users(self):
         for user in self.gen_users():
-            login = {'username': user, 'password': 'random_junk'}
+            login = {'username': user,
+                     'password': 'random_junk'}
             r = self.n_client.login(login)
             if r.json()['token'] != STRINGS['u_nf']:
                 print 'Found a valid user: %s' %user
@@ -76,12 +79,14 @@ class NobelRestTest(TestsCommon):
     def test_empty_login(self):
         r = self.n_client.login({})
         self.assertNotEqual(r.status_code, 200, 'Should not get 200 RC for empty client login')
-        self.assertEquals(self.check_success_json(r.json()), False, 'Did not get expected success message for empty login')
+        self.assertEquals(self.check_success_json(r.json()), False,
+                          'Did not get expected success message for empty login')
         self.assertEquals(r.json()['token'], STRINGS['empty'], 'Did not get expected token message for empty login')
         self.assertEquals(r.json()['refreshToken'], STRINGS['empty'])
 
     def test_empty_user(self):
-        login = {'username': '', 'password': 'test'}
+        login = {'username': '',
+                 'password': 'test'}
         r = self.n_client.login(login)
         # Assuming the Response Code actually differes for a bad call, which it doesnt
         self.assertNotEqual(r.status_code, 200, 'Should not get 200 RC for empty client username')
@@ -89,10 +94,17 @@ class NobelRestTest(TestsCommon):
         # There should be an error message warning the user to not send an empty string as username
 
     def test_extended_latin_username(self):
-        login = {'username': u'???', 'password': 'test'}
+        login = {'username': u'???'.encode('latin1'),
+                 'password': 'test'}
         r = self.n_client.login(login)
-        self.assertNotEqual(r.status_code, 200, 'Should not get 200 RC for empty client username')
+        # This user should not exists in db prior to running the test.
+        self.assertNotEqual(r.status_code, 200,
+                            'Test user exists in database or api returned wrong RC for non-existing user')
         self.assertEqual(self.check_success_json(r.json()), False)
+        # This should be a lot easier if the RC for not matching pw/user combos was something like 404
+        # Since it isnt we need to make sure we didnt get an error message and 500 Internal Server Error RC
+        self.assertNotEqual(r.status_code, 500, 'Got 500 RC when trying to login with latin-1 encoded username')
+
 
     def test_not_json(self):
         login = True
