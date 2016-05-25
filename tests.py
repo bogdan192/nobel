@@ -32,24 +32,26 @@ class NobelRestTest(TestsCommon):
         return json_resp['success']
 
     def gen_users(self):
+        # Quick'n dirty gen 5 all characters long strings
         return [''.join(i) for i in product(ascii_lowercase, repeat=5)]
 
     def test_login_with_provided(self):
         login = {'username': self.user,
                  'password': self.password}
+        # setting the check flag to True verifies the Respose Code is 200
         r = self.n_client.login(login, check=True)
-        self.assertTrue(self.check_success_json(r.json()))
+        self.assertTrue(self.check_success_json(r.json()), 'Did not get expected status message for correct user')
         # If we successfully login we should get a dict containing token and refreshToken
-        self.assertTrue(r.json()['token'])
-        self.assertTrue(r.json()['refreshToken'])
+        self.assertTrue(r.json()['token'], 'Token field empty')
+        self.assertTrue(r.json()['refreshToken'], 'refreshToken empty')
         # The two should not be the same
-        self.assertTrue(r.json()['token'] != r.json()['refreshToken'])
+        self.assertTrue(r.json()['token'] != r.json()['refreshToken'], 'Token and refreshToken are the same')
 
     def test_login_with_bad_username(self):
         login = {'username': 'bad_username', 'password': self.password}
         r = self.n_client.login(login)
         # Assuming bad login attempt for mismatching credentials status code is 403
-        self.assertEqual(r.status_code, 403)
+        self.assertEqual(r.status_code, 403, 'Got unexpected RC for bad username')
         # We should also check the response body for bad values in keys
         self.assertFalse(self.check_success_json(r.json()))
         self.assertTrue(r.json()['token'] == STRINGS['u_nf'])
@@ -58,10 +60,10 @@ class NobelRestTest(TestsCommon):
     def test_login_bad_pw(self):
         login = {'username': self.user,   'password': 'bad_password'}
         r = self.n_client.login(login)
-        self.assertEqual(r.status_code, 403)
-        self.assertFalse(self.check_success_json(r.json()))
-        self.assertTrue(r.json()['token'] == STRINGS['u_na'])
-        self.assertTrue(r.json()['refreshToken'] == STRINGS['u_na'])
+        self.assertEqual(r.status_code, 403, 'Got unexpected RC for bad password')
+        self.assertFalse(self.check_success_json(r.json()), 'Did not get expected success message for bad password')
+        self.assertTrue(r.json()['token'] == STRINGS['u_na'], 'Did not get expected token message for bad password')
+        self.assertTrue(r.json()['refreshToken'] == STRINGS['u_na'], 'Did not get expected refreshToken message')
 
     @unittest.skip('Dont wannt to bruteforce this run')
     def test_bruteforce_users(self):
@@ -74,8 +76,8 @@ class NobelRestTest(TestsCommon):
     def test_empty_login(self):
         r = self.n_client.login({})
         self.assertNotEqual(r.status_code, 200, 'Should not get 200 RC for empty client login')
-        self.assertEquals(self.check_success_json(r.json()), False)
-        self.assertEquals(r.json()['token'], STRINGS['empty'])
+        self.assertEquals(self.check_success_json(r.json()), False, 'Did not get expected success message for empty login')
+        self.assertEquals(r.json()['token'], STRINGS['empty'], 'Did not get expected token message for empty login')
         self.assertEquals(r.json()['refreshToken'], STRINGS['empty'])
 
     def test_empty_user(self):
@@ -87,7 +89,7 @@ class NobelRestTest(TestsCommon):
         # There should be an error message warning the user to not send an empty string as username
 
     def test_extended_latin_username(self):
-        login = {'username': '???', 'password': 'test'}
+        login = {'username': u'???', 'password': 'test'}
         r = self.n_client.login(login)
         self.assertNotEqual(r.status_code, 200, 'Should not get 200 RC for empty client username')
         self.assertEqual(self.check_success_json(r.json()), False)
@@ -101,5 +103,6 @@ class NobelRestTest(TestsCommon):
         #TODO: No JSON in body generate exceptions
         #TODO: those exceptions are too verbose. Change the below asserts after the code is fixed
         assert False
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

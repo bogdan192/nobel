@@ -4,8 +4,6 @@ import requests
 class NobelRestClient(object):
     def __init__(self, api_url):
         self.url = api_url
-        # self.user = user
-        # self.password = password
 
     def check_status(self, response, status=200, error=''):
         assert response.status_code == status, \
