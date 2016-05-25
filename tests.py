@@ -88,7 +88,7 @@ class NobelRestTest(TestsCommon):
         login = {'username': '',
                  'password': 'test'}
         r = self.n_client.login(login)
-        # Assuming the Response Code actually differes for a bad call, which it doesnt
+        # Assuming the Response Code actually differs for a bad call, which it doesnt
         self.assertNotEqual(r.status_code, 200, 'Should not get 200 RC for empty client username')
         self.assertEqual(self.check_success_json(r.json()), False)
         # There should be an error message warning the user to not send an empty string as username
@@ -115,6 +115,18 @@ class NobelRestTest(TestsCommon):
         #TODO: No JSON in body generate exceptions
         #TODO: those exceptions are too verbose. Change the below asserts after the code is fixed
         assert False
+
+    def test_get_method_login(self):
+        r = self.n_client._get('/login')
+        self.assertEqual(r.status_code, 500, 'Did not receive expected RC for GET instead of POST')
+
+    def test_put_method_login(self):
+        r = self.n_client._put('/login', {})
+        self.assertEqual(r.status_code, 500, 'Did not receive expected RC for PUT instead of POST')
+
+    def test_delete_method_login(self):
+        r = self.n_client._delete('/login')
+        self.assertEqual(r.status_code, 500, 'Did not receive expected RC for DELETE instead of POST')
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
